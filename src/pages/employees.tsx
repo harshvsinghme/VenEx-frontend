@@ -232,7 +232,7 @@ const Employees = () => {
             bordered
             dataSource={employees as IEmployee[]}
             columns={mergedColumns}
-            pagination={{ onChange: cancel }}
+            pagination={{ onChange: cancel, pageSize: 5 }}
           />
         </Form>
       </div>
