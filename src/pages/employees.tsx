@@ -12,6 +12,9 @@ import {
 } from "antd";
 import { toast } from "react-toastify";
 import { employeesData } from "../utils/data";
+import { MdEdit } from "react-icons/md";
+import { FaCheckCircle } from "react-icons/fa";
+import { FaTimesCircle } from "react-icons/fa";
 
 interface DataType {
   key: string;
@@ -41,7 +44,7 @@ const EditableCell: React.FC<React.PropsWithChildren<EditableCellProps>> = ({
   ...restProps
 }) => {
   const inputNode =
-    inputType === "number" ? <InputNumber min={0} /> : <Input />;
+    inputType === "number" ? <InputNumber min={0} max={100} /> : <Input />;
 
   return (
     <td {...restProps}>
@@ -177,24 +180,21 @@ const Employees = () => {
       render: (_: any, record: DataType) => {
         const editable = isEditing(record);
         return editable ? (
-          <span className="cursor-pointer">
-            <Typography.Link
+          <span className="flex cursor-pointer">
+            <Typography
               onClick={() => save(record.key)}
               style={{ marginInlineEnd: 8 }}
             >
-              Save
-            </Typography.Link>
+              <FaCheckCircle size={20} className="text-[lightgreen]" />
+            </Typography>
             <Popconfirm title="Sure to cancel?" onConfirm={cancel}>
-              Cancel
+              <FaTimesCircle size={20} className="text-[red]" />
             </Popconfirm>
           </span>
         ) : (
-          <Typography.Link
-            disabled={editingKey !== ""}
-            onClick={() => edit(record)}
-          >
-            Edit
-          </Typography.Link>
+          <Typography onClick={() => edit(record)} className="cursor-pointer">
+            <MdEdit size={16} />
+          </Typography>
         );
       },
     },
@@ -223,12 +223,13 @@ const Employees = () => {
   return (
     <div>
       <PerformanceSummary summary={summary} />
-      <div className="mt-20 mb-5 mx-2 md:mx-40 border rounded-md">
+      <div className="mt-20 mb-5 mx-2 md:mx-40 max-w-full overflow-x-auto border rounded-md">
         <Form form={form} component={false}>
           <Table<DataType>
             components={{
               body: { cell: EditableCell },
             }}
+            bordered
             dataSource={employees as IEmployee[]}
             columns={mergedColumns}
             pagination={{ onChange: cancel }}
