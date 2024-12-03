@@ -1,5 +1,5 @@
 export interface IEmployee {
-  id: number;
+  key: string;
   name: string;
   productivity: number;
   collaboration: number;

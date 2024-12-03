@@ -1,44 +1,69 @@
 import { useEffect, useState } from "react";
 import PerformanceSummary from "../components/performace-summary";
 import { IEmployee } from "../types/employee";
+import {
+  Form,
+  Input,
+  InputNumber,
+  Popconfirm,
+  Table,
+  TableProps,
+  Typography,
+} from "antd";
+import { toast } from "react-toastify";
+import { employeesData } from "../utils/data";
 
-const employeesData = [
-  {
-    id: 1,
-    name: "John Doe",
-    productivity: 85,
-    collaboration: 90,
-    communication: 88,
-  },
-  {
-    id: 2,
-    name: "Jane Smith",
-    productivity: 78,
-    collaboration: 84,
-    communication: 80,
-  },
-  {
-    id: 3,
-    name: "Alice Johnson",
-    productivity: 92,
-    collaboration: 88,
-    communication: 95,
-  },
-  {
-    id: 4,
-    name: "Bob Brown",
-    productivity: 70,
-    collaboration: 75,
-    communication: 72,
-  },
-  {
-    id: 5,
-    name: "Eve Davis",
-    productivity: 88,
-    collaboration: 92,
-    communication: 90,
-  },
-];
+interface DataType {
+  key: string;
+  name: string;
+  productivity: number;
+  collaboration: number;
+  communication: number;
+}
+
+interface EditableCellProps extends React.HTMLAttributes<HTMLElement> {
+  editing: boolean;
+  dataIndex: string;
+  title: any;
+  inputType: "number" | "text";
+  record: DataType;
+  index: number;
+}
+
+const EditableCell: React.FC<React.PropsWithChildren<EditableCellProps>> = ({
+  editing,
+  dataIndex,
+  title,
+  inputType,
+  record,
+  index,
+  children,
+  ...restProps
+}) => {
+  const inputNode =
+    inputType === "number" ? <InputNumber min={0} /> : <Input />;
+
+  return (
+    <td {...restProps}>
+      {editing ? (
+        <Form.Item
+          name={dataIndex}
+          style={{ margin: 0 }}
+          rules={[
+            {
+              required: true,
+              message: `Please Input ${title}!`,
+            },
+          ]}
+        >
+          {inputNode}
+        </Form.Item>
+      ) : (
+        children
+      )}
+    </td>
+  );
+};
 
 const Employees = () => {
   const [employees, setEmployees] = useState<IEmployee[]>([]);
@@ -79,10 +104,137 @@ const Employees = () => {
     }
   }, [employees]);
 
+  const [form] = Form.useForm();
+  const [editingKey, setEditingKey] = useState("");
+
+  const isEditing = (record: DataType) => record.key === editingKey;
+
+  const edit = (record: Partial<DataType> & { key: React.Key }) => {
+    form.setFieldsValue({ ...record });
+    setEditingKey(record.key);
+  };
+
+  const cancel = () => {
+    setEditingKey("");
+  };
+
+  const save = async (key: React.Key) => {
+    try {
+      const row = (await form.validateFields()) as IEmployee;
+
+      const newData = [...employees];
+      const index = newData.findIndex((item) => key === item.key);
+      if (index > -1) {
+        const item = newData[index];
+        newData.splice(index, 1, {
+          ...item,
+          ...row,
+        });
+        setEmployees(newData);
+        setEditingKey("");
+        toast.success(
+          `Successfully updated the details of ${newData[index].name}(${newData[index].key})`
+        );
+      }
+    } catch (errInfo) {
+      console.error("Validate Failed:", errInfo);
+    }
+  };
+
+  const columns = [
+    {
+      title: "ID",
+      dataIndex: "key",
+      key: "key",
+    },
+    {
+      title: "Name",
+      dataIndex: "name",
+      key: "name",
+    },
+    {
+      title: "Productivity",
+      dataIndex: "productivity",
+      key: "productivity",
+      editable: true,
+    },
+    {
+      title: "Collaboration",
+      dataIndex: "collaboration",
+      key: "collaboration",
+      editable: true,
+    },
+    {
+      title: "Communication",
+      dataIndex: "communication",
+      key: "communication",
+      editable: true,
+    },
+
+    {
+      title: "Action",
+      dataIndex: "action",
+      render: (_: any, record: DataType) => {
+        const editable = isEditing(record);
+        return editable ? (
+          <span className="cursor-pointer">
+            <Typography.Link
+              onClick={() => save(record.key)}
+              style={{ marginInlineEnd: 8 }}
+            >
+              Save
+            </Typography.Link>
+            <Popconfirm title="Sure to cancel?" onConfirm={cancel}>
+              Cancel
+            </Popconfirm>
+          </span>
+        ) : (
+          <Typography.Link
+            disabled={editingKey !== ""}
+            onClick={() => edit(record)}
+          >
+            Edit
+          </Typography.Link>
+        );
+      },
+    },
+  ];
+
+  const mergedColumns: TableProps<DataType>["columns"] = columns.map((col) => {
+    if (!col.editable) {
+      return col;
+    }
+    return {
+      ...col,
+      onCell: (record: DataType) => ({
+        record,
+        inputType: ["productivity", "collaboration", "communication"].includes(
+          col.dataIndex
+        )
+          ? "number"
+          : "text",
+        dataIndex: col.dataIndex,
+        title: col.title,
+        editing: isEditing(record),
+      }),
+    };
+  });
+
   return (
     <div>
       <PerformanceSummary summary={summary} />
-      <div>Table</div>
+      <div className="mt-20 mb-5 mx-2 md:mx-40 border rounded-md">
+        <Form form={form} component={false}>
+          <Table<DataType>
+            components={{
+              body: { cell: EditableCell },
+            }}
+            dataSource={employees as IEmployee[]}
+            columns={mergedColumns}
+            pagination={{ onChange: cancel }}
+          />
+        </Form>
+      </div>
     </div>
   );
 };

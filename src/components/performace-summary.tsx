@@ -9,7 +9,7 @@ const PerformanceSummary = ({ summary }: IPerformanceSummary) => {
       >
         Performance Summary
       </p>
-      <div className="flex justify-around mt-10">
+      <div className="flex flex-wrap gap-5 md:gap-0 justify-around mt-10">
         <div
           className="shadow-none rounded-xl h-[11em] w-[20em] bg-[#4e4fee] text-white"
           style={{ boxShadow: "5px 4px 16px -4px rgba(0, 0, 0, 0.75)" }}
