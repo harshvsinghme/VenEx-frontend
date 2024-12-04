@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import PerformanceSummary from "../components/performace-summary";
-import { IEmployee } from "../types/employee";
+import { IEmployee, IEmployeeRecord } from "../types/employee";
 import {
   Form,
   Input,
@@ -11,10 +11,10 @@ import {
   Typography,
 } from "antd";
 import { toast } from "react-toastify";
-import { employeesData } from "../utils/data";
 import { MdEdit } from "react-icons/md";
 import { FaCheckCircle } from "react-icons/fa";
 import { FaTimesCircle } from "react-icons/fa";
+import axiosAPI from "../api/axios";
 
 interface DataType {
   key: string;
@@ -81,7 +81,16 @@ const Employees = () => {
     console.log("A");
     if (employees.length === 0) {
       console.log("B");
-      setEmployees(employeesData);
+      (async () => {
+        const employeesData = await fetchEmployeesData();
+        if (employeesData.length > 0) {
+          setEmployees(
+            employeesData.map((employee: IEmployeeRecord) => {
+              return { ...employee, key: employee.id, id: undefined };
+            }) as IEmployee[]
+          );
+        }
+      })();
     } else {
       console.log("C");
       const total = employees.reduce(
@@ -133,11 +142,19 @@ const Employees = () => {
           ...item,
           ...row,
         });
-        setEmployees(newData);
-        setEditingKey("");
-        toast.success(
-          `Successfully updated the details of ${newData[index].name}(${newData[index].key})`
+        const updateResult = await updateEmployeePerformanceById(
+          key as string,
+          row.productivity,
+          row.collaboration,
+          row.communication
         );
+        if (updateResult) {
+          setEmployees(newData);
+          setEditingKey("");
+          toast.success(
+            `Successfully updated the details of ${newData[index].name}(${newData[index].key})`
+          );
+        }
       }
     } catch (errInfo) {
       console.error("Validate Failed:", errInfo);
@@ -238,6 +255,39 @@ const Employees = () => {
       </div>
     </div>
   );
+};
+
+const fetchEmployeesData = async () => {
+  try {
+    const response = await axiosAPI.get("/employee-service/employees");
+    console.log(response.data);
+    return response.data.data.employees;
+  } catch (error) {
+    console.error("Error fetching employees:", error);
+  }
+};
+
+const updateEmployeePerformanceById = async (
+  empId: string,
+  productivity: number,
+  collaboration: number,
+  communication: number
+) => {
+  try {
+    const response = await axiosAPI.patch(
+      `/employee-service/employees/${empId}`,
+      {
+        productivity,
+        collaboration,
+        communication,
+      }
+    );
+    console.log("Performance updated successfully:", response.data);
+    return true;
+  } catch (error) {
+    console.error(`Error updating performance for employee ${empId}:`, error);
+    return false;
+  }
 };
 
 export default Employees;
