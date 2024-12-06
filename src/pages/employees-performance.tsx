@@ -60,12 +60,12 @@ const EmployeesPerformance = () => {
 
   return (
     <div className="bg-[teal] min-h-[100vh]">
-      <p className="text-white text-[2em] text-center py-5">
+      <p className="text-white text-[2em] text-center pt-5 pb-20">
         Employees Performance
       </p>
       <div className="flex justify-around align-center flex-wrap gap-4 md:gap-9">
-        {employees.map((employee) => (
-          <Card className="w-60">
+        {employees.map((employee, ind) => (
+          <Card className="w-60" key={ind}>
             <p className="text-center text-[1.3em]">
               <span>({employee.id}).</span>{" "}
               <span className="ml-1">{employee.name}</span>
