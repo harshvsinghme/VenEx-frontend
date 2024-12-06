@@ -1,6 +1,7 @@
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import Employees from "./pages/employees";
 import { ToastContainer } from "react-toastify";
+import EmployeesPerformance from "./pages/employees-performance";
 
 const App = () => {
   return (
@@ -19,7 +20,13 @@ const App = () => {
       />
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<Employees />} />
+          <Route path="/">
+            <Route index element={<Employees />} />
+            <Route
+              path="employees-performance"
+              element={<EmployeesPerformance />}
+            />
+          </Route>
           <Route
             path="*"
             element={

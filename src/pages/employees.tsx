@@ -16,20 +16,12 @@ import { FaCheckCircle } from "react-icons/fa";
 import { FaTimesCircle } from "react-icons/fa";
 import axiosAPI from "../api/axios";
 
-interface DataType {
-  key: string;
-  name: string;
-  productivity: number;
-  collaboration: number;
-  communication: number;
-}
-
 interface EditableCellProps extends React.HTMLAttributes<HTMLElement> {
   editing: boolean;
   dataIndex: string;
   title: any;
   inputType: "number" | "text";
-  record: DataType;
+  record: IEmployee;
   index: number;
 }
 
@@ -78,9 +70,7 @@ const Employees = () => {
   });
 
   useEffect(() => {
-    console.log("A");
     if (employees.length === 0) {
-      console.log("B");
       (async () => {
         const employeesData = await fetchEmployeesData();
         if (employeesData.length > 0) {
@@ -92,7 +82,6 @@ const Employees = () => {
         }
       })();
     } else {
-      console.log("C");
       const total = employees.reduce(
         (acc, emp) => ({
           productivity: acc.productivity + emp.productivity,
@@ -119,9 +108,9 @@ const Employees = () => {
   const [form] = Form.useForm();
   const [editingKey, setEditingKey] = useState("");
 
-  const isEditing = (record: DataType) => record.key === editingKey;
+  const isEditing = (record: IEmployee) => record.key === editingKey;
 
-  const edit = (record: Partial<DataType> & { key: React.Key }) => {
+  const edit = (record: Partial<IEmployee> & { key: React.Key }) => {
     form.setFieldsValue({ ...record });
     setEditingKey(record.key);
   };
@@ -194,7 +183,7 @@ const Employees = () => {
     {
       title: "Action",
       dataIndex: "action",
-      render: (_: any, record: DataType) => {
+      render: (_: any, record: IEmployee) => {
         const editable = isEditing(record);
         return editable ? (
           <span className="flex cursor-pointer">
@@ -217,13 +206,13 @@ const Employees = () => {
     },
   ];
 
-  const mergedColumns: TableProps<DataType>["columns"] = columns.map((col) => {
+  const mergedColumns: TableProps<IEmployee>["columns"] = columns.map((col) => {
     if (!col.editable) {
       return col;
     }
     return {
       ...col,
-      onCell: (record: DataType) => ({
+      onCell: (record: IEmployee) => ({
         record,
         inputType: ["productivity", "collaboration", "communication"].includes(
           col.dataIndex
@@ -242,7 +231,7 @@ const Employees = () => {
       <PerformanceSummary summary={summary} />
       <div className="mt-20 mb-5 mx-2 md:mx-40 max-w-full overflow-x-auto border rounded-md">
         <Form form={form} component={false}>
-          <Table<DataType>
+          <Table<IEmployee>
             components={{
               body: { cell: EditableCell },
             }}
